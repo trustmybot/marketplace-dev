@@ -1,11 +1,11 @@
 {
-  "name": "trustmybot-local",
+  "name": "trustmybot-dev",
   "owner": {
     "name": "trustmybot",
     "url": "https://github.com/trustmybot"
   },
   "metadata": {
-    "description": "TMB plugin marketplace — DEV channel. Tracks trustmybot/plugin's `dev` branch (bleeding edge; faster than rc, less polished). Sibling channel to `trustmybot` (stable, main) and `trustmybot-rc` (release candidates)."
+    "description": "TMB plugin marketplace — DEV channel. Tracks trustmybot/plugin's `dev` branch (bleeding edge; faster than rc, less polished). Sibling channel to `trustmybot` (stable, main) and `trustmybot-rc` (release candidates). Pattern is reusable — any developer can fork this catalog and change `ref` to their own plugin branch."
   },
   "plugins": [
     {
