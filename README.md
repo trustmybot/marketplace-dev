@@ -50,22 +50,31 @@ The catalog format is reusable — any branch (yours or someone else's) becomes 
    ```bash
    git clone https://github.com/trustmybot/marketplace-dev.git
    ```
-3. Edit `.claude-plugin/marketplace.json` — change `ref` to your branch (or change `repo` to point at your fork):
+3. Edit `.claude-plugin/marketplace.json` — change the top-level `name` to something distinctive (so CC won't confuse it with the published `trustmybot-dev`), and change `source.ref` to your branch (or `source.repo` to your fork):
    ```json
-   "source": {
-     "source": "github",
-     "repo": "<your-owner>/plugin",
-     "ref": "<your-branch>"
+   {
+     "name": "<your-branch>",
+     ...
+     "plugins": [
+       {
+         "name": "tmb",
+         "source": {
+           "source": "github",
+           "repo": "<your-owner>/plugin",
+           "ref": "<your-branch>"
+         }
+       }
+     ]
    }
    ```
    No need to push this edit. The local copy is enough — CC reads the catalog from your filesystem.
-4. Add the marketplace from the local clone path:
+4. Add the marketplace from the local clone path and install via your catalog name:
    ```
    /plugin marketplace add <path-to>/marketplace-dev
-   /plugin install tmb@trustmybot-dev
+   /plugin install tmb@<your-branch>
    ```
 
-CC reads the catalog from your local disk; the plugin source still resolves via github (so your branch needs to be pushed somewhere CC can clone). When you update your branch and want CC to pull: `/plugin marketplace update trustmybot-dev` + `/plugin update tmb@trustmybot-dev`.
+CC reads the catalog from your local disk; the plugin source still resolves via github (so your branch needs to be pushed somewhere CC can clone). When you push new commits to your branch and want CC to pull: `/plugin marketplace update <your-branch>` + `/plugin update tmb@<your-branch>`.
 
 This pattern is how the dev channel itself was built — `trustmybot/marketplace-dev` is just a `trustmybot/plugin@dev` instance of the same template.
 
