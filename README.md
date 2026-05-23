@@ -5,8 +5,8 @@ Catalog for the **dev channel** of the [TMB plugin](https://github.com/trustmybo
 ## Install
 
 ```
-/plugin marketplace add trustmybot/marketplace-local
-/plugin install tmb@trustmybot-local
+/plugin marketplace add trustmybot/marketplace-dev
+/plugin install tmb@trustmybot-dev
 ```
 
 The dev channel installs as `tmb` (same name as the released plugin), so only one can be enabled at a time.
@@ -32,18 +32,46 @@ Use `/plugin disable` rather than `/plugin uninstall` so you can flip back to th
 
 ## Pull the latest dev tip
 
-The marketplace ref is `dev`, but CC caches a clone — newer commits on `dev` don't reach your install until you refresh the catalog:
+The marketplace ref is `dev`, but CC caches a clone — newer commits on `dev` don't reach your install until you refresh:
 
 ```
-/plugin marketplace update trustmybot-local
-/plugin update tmb@trustmybot-local
+/plugin marketplace update trustmybot-dev
+/plugin update tmb@trustmybot-dev
 ```
 
-Or simpler — `/reload-plugins` only re-reads what CC already has on disk; you need the `update` calls to fetch new commits from the remote `dev` branch.
+`/reload-plugins` only re-reads what CC already has on disk; you need `marketplace update` + `update` to fetch new commits from the remote `dev` branch.
 
-## Test your own uncommitted edits (not the dev tip)
+## Test *your own* plugin branch via this catalog
 
-`marketplace-local` tracks the published `dev` branch only — your in-flight local changes in `TMB/plugin/` aren't reflected until you push them. To test uncommitted edits, skip the marketplace and point CC at the working tree directly:
+The catalog format is reusable — any branch (yours or someone else's) becomes installable by editing one line. Workflow:
+
+1. Push your plugin branch to `trustmybot/plugin` (or your fork).
+2. Clone this catalog locally:
+   ```bash
+   git clone https://github.com/trustmybot/marketplace-dev.git
+   ```
+3. Edit `.claude-plugin/marketplace.json` — change `ref` to your branch (or change `repo` to point at your fork):
+   ```json
+   "source": {
+     "source": "github",
+     "repo": "<your-owner>/plugin",
+     "ref": "<your-branch>"
+   }
+   ```
+   No need to push this edit. The local copy is enough — CC reads the catalog from your filesystem.
+4. Add the marketplace from the local clone path:
+   ```
+   /plugin marketplace add <path-to>/marketplace-dev
+   /plugin install tmb@trustmybot-dev
+   ```
+
+CC reads the catalog from your local disk; the plugin source still resolves via github (so your branch needs to be pushed somewhere CC can clone). When you update your branch and want CC to pull: `/plugin marketplace update trustmybot-dev` + `/plugin update tmb@trustmybot-dev`.
+
+This pattern is how the dev channel itself was built — `trustmybot/marketplace-dev` is just a `trustmybot/plugin@dev` instance of the same template.
+
+## Test *uncommitted* edits (not pushed anywhere)
+
+Marketplace plugins must be pulled from a remote (github / url). For edits that aren't pushed anywhere yet, skip the marketplace entirely and point CC at the working tree directly:
 
 ```bash
 claude --plugin-dir <path-to>/TMB/plugin --debug api,hooks --debug-file .claude/logs/tmb.log
@@ -54,13 +82,13 @@ claude --plugin-dir <path-to>/TMB/plugin --debug api,hooks --debug-file .claude/
 ## Flip back to the released channel when done
 
 ```
-/plugin uninstall tmb@trustmybot-local
+/plugin uninstall tmb@trustmybot-dev
 /plugin enable tmb
 ```
 
 ## DB-path overlap
 
-`plugin.json` declares `"name": "tmb"`, so the trajectory DB resolves to `.claude/tmb/trajectory.db` for both the released and the dev install — whichever is enabled at the moment writes to the same path per project. Two clean ways to keep state separated when you want it:
+`plugin.json` declares `"name": "tmb"`, so the trajectory DB resolves to `.claude/tmb/trajectory.db` for both the released and the dev install — whichever is enabled at the moment writes to the same path per project. Two ways to keep state separated when you want it:
 
 1. **Test in a scratch project dir** — the DB is per-project; a fresh repo gives the dev install its own DB.
 2. **Override per-session**:
