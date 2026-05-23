@@ -5,16 +5,17 @@
     "url": "https://github.com/trustmybot"
   },
   "metadata": {
-    "description": "TMB plugin marketplace — LOCAL DEV channel. Points at the in-tree plugin/ checkout. For contributors testing local edits against a real CC session."
+    "description": "TMB plugin marketplace — DEV channel. Tracks trustmybot/plugin's `dev` branch (bleeding edge; faster than rc, less polished). Sibling channel to `trustmybot` (stable, main) and `trustmybot-rc` (release candidates)."
   },
   "plugins": [
     {
       "name": "tmb",
       "source": {
-        "source": "file",
-        "path": "../../plugin"
+        "source": "github",
+        "repo": "trustmybot/plugin",
+        "ref": "dev"
       },
-      "description": "Local dev checkout of the TMB plugin. Installs as `tmb` (same name as the released plugin) — disable the released `tmb` first."
+      "description": "TMB plugin — DEV channel. Tracks the `dev` branch — what's about to ship in the next rc. Installs as `tmb` (same as the released plugin); disable the released `tmb` first."
     }
   ]
 }
