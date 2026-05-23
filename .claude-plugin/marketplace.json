@@ -1,0 +1,20 @@
+{
+  "name": "trustmybot-local",
+  "owner": {
+    "name": "trustmybot",
+    "url": "https://github.com/trustmybot"
+  },
+  "metadata": {
+    "description": "TMB plugin marketplace — LOCAL DEV channel. Points at the in-tree plugin/ checkout. For contributors testing local edits against a real CC session."
+  },
+  "plugins": [
+    {
+      "name": "tmb",
+      "source": {
+        "source": "file",
+        "path": "../../plugin"
+      },
+      "description": "Local dev checkout of the TMB plugin. Installs as `tmb` (same name as the released plugin) — disable the released `tmb` first."
+    }
+  ]
+}
