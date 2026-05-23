@@ -1,48 +1,23 @@
-# TMB plugin marketplace — LOCAL DEV
+# TMB plugin marketplace — DEV
 
-Catalog for the local-dev channel of the [TMB plugin](https://github.com/trustmybot/plugin). Points at the in-tree `plugin/` checkout — for contributors who want to test local edits against a real Claude Code session before promoting to rc.
+Catalog for the **dev channel** of the [TMB plugin](https://github.com/trustmybot/plugin). Tracks the `dev` branch of `trustmybot/plugin` — what's about to ship in the next rc. Use this when you want to try the latest doctrine + features before they reach the rc or stable channels.
 
-## 1. Set up the TMB workspace
-
-The workspace is a parent directory holding the plugin source, the marketplace catalogs, and any dev artifacts (logs, scratch DBs, notes). Clone the plugin into it; the marketplaces are siblings.
-
-```bash
-mkdir -p TMB && cd TMB
-git clone https://github.com/trustmybot/plugin.git
-git clone https://github.com/trustmybot/marketplace-local.git
-# optional siblings:
-# git clone https://github.com/trustmybot/marketplace.git
-# git clone https://github.com/trustmybot/marketplace-rc.git
-```
-
-Final layout:
+## Install
 
 ```
-TMB/
-├── plugin/                  ← the plugin source you edit + test
-└── marketplace-local/       ← this catalog
-    └── .claude-plugin/
-        └── marketplace.json ← source: ../../plugin  (resolves to TMB/plugin)
+/plugin marketplace add trustmybot/marketplace-local
+/plugin install tmb@trustmybot-local
 ```
 
-## 2. Switch any existing `tmb` install out of the way
+The dev channel installs as `tmb` (same name as the released plugin), so only one can be enabled at a time.
 
-The local plugin installs as `tmb` (same name as the released plugin) so the DB path / hook namespace matches production. Only one `tmb` can be enabled at a time. Before installing local:
+### Disable any existing `tmb` install first
 
 ```
 /plugin disable tmb
 ```
 
-(Use `/plugin disable` rather than `/plugin uninstall` so you can flip back to the released channel with `/plugin enable tmb` when done.)
-
-## 3. Install the local-dev plugin
-
-```
-/plugin marketplace add <path-to>/TMB/marketplace-local
-/plugin install tmb@trustmybot-local
-```
-
-The plugin is now loaded from `TMB/plugin/` on disk.
+Use `/plugin disable` rather than `/plugin uninstall` so you can flip back to the released channel with `/plugin enable tmb` when done.
 
 ### When CC asks for scope, pick *local*
 
@@ -53,53 +28,30 @@ The plugin is now loaded from `TMB/plugin/` on disk.
 > Install for you, in this repo only (local scope)
 ```
 
-**Pick local scope.** The `<path-to>/TMB/marketplace-local` path is developer-specific — committing it to project scope would be wrong for anyone else who clones the repo. Local-dev is always a per-developer choice; teammates may each be on a different channel (stable / rc / local) and that's fine.
+**Pick local scope.** The dev channel is a per-developer choice; teammates may each be on a different channel (stable / rc / dev). Project scope is right only when a team wants everyone pinned to the same channel.
 
-(Project scope is the right answer for the released marketplaces — `trustmybot` or `trustmybot-rc` — when a team wants everyone pinned to the same channel.)
+## Pull the latest dev tip
 
-## 4. Use it
-
-### Reflect the latest on-disk state
-
-Edit files in `TMB/plugin/`, then in any active CC session:
+The marketplace ref is `dev`, but CC caches a clone — newer commits on `dev` don't reach your install until you refresh the catalog:
 
 ```
-/reload-plugins
+/plugin marketplace update trustmybot-local
+/plugin update tmb@trustmybot-local
 ```
 
-`/reload-plugins` re-resolves hooks + skills + MCP server registrations from the source tree. No reinstall cycle — your next prompt sees the new state.
+Or simpler — `/reload-plugins` only re-reads what CC already has on disk; you need the `update` calls to fetch new commits from the remote `dev` branch.
 
-### Reflect a specific version (tag, branch, commit)
+## Test your own uncommitted edits (not the dev tip)
 
-The `file` source tracks whatever's at the on-disk path, so version pinning happens in git, not in the marketplace:
-
-```bash
-cd TMB/plugin
-git fetch --tags origin
-git checkout v0.7.0-rc.4              # or any branch / commit SHA
-# back in CC:
-/reload-plugins
-```
-
-To return to the latest:
-
-```bash
-cd TMB/plugin && git switch dev && git pull --ff-only
-# back in CC:
-/reload-plugins
-```
-
-## 5. Fresh-session boot with debug logs
-
-When you need a clean session (no cached MCP server, no inherited state) and want to capture API + hook traffic to disk, skip the marketplace add and point CC at the checkout directly:
+`marketplace-local` tracks the published `dev` branch only — your in-flight local changes in `TMB/plugin/` aren't reflected until you push them. To test uncommitted edits, skip the marketplace and point CC at the working tree directly:
 
 ```bash
 claude --plugin-dir <path-to>/TMB/plugin --debug api,hooks --debug-file .claude/logs/tmb.log
 ```
 
-`--plugin-dir` forces `clearPluginCache`; the new session re-resolves everything from disk on boot.
+`--plugin-dir` forces `clearPluginCache`; every boot re-resolves from disk. The `--debug api,hooks --debug-file` capture is optional but useful for L5/L6 runs and MCP-server crash repros.
 
-## 6. Done? Flip back to the released channel
+## Flip back to the released channel when done
 
 ```
 /plugin uninstall tmb@trustmybot-local
@@ -108,7 +60,7 @@ claude --plugin-dir <path-to>/TMB/plugin --debug api,hooks --debug-file .claude/
 
 ## DB-path overlap
 
-`plugin.json` declares `"name": "tmb"`, so the trajectory DB resolves to `.claude/tmb/trajectory.db` for both the released and the local install — whichever is enabled at the moment writes to the same path per project. Two clean ways to keep state separated when you want it:
+`plugin.json` declares `"name": "tmb"`, so the trajectory DB resolves to `.claude/tmb/trajectory.db` for both the released and the dev install — whichever is enabled at the moment writes to the same path per project. Two clean ways to keep state separated when you want it:
 
 1. **Test in a scratch project dir** — the DB is per-project; a fresh repo gives the dev install its own DB.
 2. **Override per-session**:
@@ -118,10 +70,10 @@ claude --plugin-dir <path-to>/TMB/plugin --debug api,hooks --debug-file .claude/
 
 ## Channel routing
 
-- This dir: LOCAL DEV channel (in-tree `plugin/` checkout)
-- RC: [trustmybot/marketplace-rc](https://github.com/trustmybot/marketplace-rc) — pre-release builds
-- Stable: [trustmybot/marketplace](https://github.com/trustmybot/marketplace) — production
+- This catalog: **DEV channel** (`trustmybot/plugin@dev` — bleeding edge)
+- [trustmybot/marketplace-rc](https://github.com/trustmybot/marketplace-rc) — pre-release builds (rc tags)
+- [trustmybot/marketplace](https://github.com/trustmybot/marketplace) — production (stable tags from main)
 
 ## Source
 
-Plugin code lives in `../plugin`. This dir contains only the marketplace catalog (`.claude-plugin/marketplace.json`).
+Plugin code lives at [trustmybot/plugin](https://github.com/trustmybot/plugin). This repo contains only the marketplace catalog (`.claude-plugin/marketplace.json`).
