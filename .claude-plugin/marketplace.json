@@ -11,8 +11,8 @@
     {
       "name": "tmb",
       "source": {
-        "source": "url",
-        "url": "https://github.com/trustmybot/plugin.git",
+        "source": "github",
+        "repo": "trustmybot/plugin",
         "ref": "dev"
       },
       "description": "TMB plugin — DEV channel. Tracks the `dev` branch — what's about to ship in the next rc. Installs as `tmb` (same as the released plugin); disable the released `tmb` first."
