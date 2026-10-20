@@ -5,7 +5,7 @@
     "url": "https://github.com/trustmybot"
   },
   "metadata": {
-    "description": "TMB plugin marketplace — DEV channel. Tracks trustmybot/plugin's `dev` branch (bleeding edge; faster than rc, less polished). Sibling channel to `trustmybot` (stable, main) and `trustmybot-rc` (release candidates). Pattern is reusable — any developer can fork this catalog and change `ref` to their own plugin branch."
+    "description": "TMB plugin marketplace — DEV channel. Tracks trustmybot/plugin's `dev-build` branch, the CI-stamped copy of `dev` (bleeding edge; faster than rc, less polished). Sibling channel to `trustmybot` (stable, main) and `trustmybot-rc` (release candidates). Pattern is reusable — any developer can fork this catalog and change `ref` to their own plugin branch."
   },
   "plugins": [
     {
@@ -13,9 +13,9 @@
       "source": {
         "source": "github",
         "repo": "trustmybot/plugin",
-        "ref": "dev"
+        "ref": "dev-build"
       },
-      "description": "TMB plugin — DEV channel. Tracks the `dev` branch — what's about to ship in the next rc. Installs as `tmb` (same as the released plugin); disable the released `tmb` first."
+      "description": "TMB plugin — DEV channel. Tracks `dev-build`, the CI-stamped copy of the `dev` branch — what's about to ship in the next rc. Installs as `tmb` (same as the released plugin); disable the released `tmb` first."
     }
   ]
 }

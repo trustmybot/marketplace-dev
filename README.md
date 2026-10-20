@@ -1,6 +1,6 @@
 # TMB plugin marketplace — DEV
 
-Catalog for the **dev channel** of the [TMB plugin](https://github.com/trustmybot/plugin). Tracks the `dev` branch of `trustmybot/plugin` — what's about to ship in the next rc. Use this when you want to try the latest doctrine + features before they reach the rc or stable channels.
+Catalog for the **dev channel** of the [TMB plugin](https://github.com/trustmybot/plugin). Tracks `trustmybot/plugin@dev-build`, the CI-stamped copy of `dev` — what's about to ship in the next rc. Use this when you want to try the latest doctrine + features before they reach the rc or stable channels.
 
 ## Install
 
@@ -32,14 +32,29 @@ Use `/plugin disable` rather than `/plugin uninstall` so you can flip back to th
 
 ## Pull the latest dev tip
 
-The marketplace ref is `dev`, but CC caches a clone — newer commits on `dev` don't reach your install until you refresh:
+The marketplace ref is `dev-build`. CI stamps a new version on every merge to `dev`, so each merge shows up as an update. CC caches a clone, so refresh to fetch it:
 
 ```
 /plugin marketplace update trustmybot-dev
 /plugin update tmb@trustmybot-dev
 ```
 
-`/reload-plugins` only re-reads what CC already has on disk; you need `marketplace update` + `update` to fetch new commits from the remote `dev` branch.
+`/reload-plugins` only re-reads what CC already has on disk; you need `marketplace update` + `update` to fetch the new build from the remote `dev-build` branch.
+
+## Which build am I on?
+
+On every push to `dev`, CI force-pushes `dev-build`: `dev` plus one commit that stamps the version `X.Y.Z-dev.<n>.gh<PR>` (e.g. `1.2.0-dev.2.gh1605`).
+
+- `<n>` — merges to `dev` since the last stable release. Builds sort by it.
+- `gh<PR>` — the PR that produced the build. A label only; not used for ordering.
+
+To check whether a fix is in your build: find the build that shipped the fix's PR (`gh<PR>`); your build has the fix if its `n` is at or above that build's `n`.
+
+See your installed version in `/plugin`, or:
+
+```bash
+jq '.plugins["tmb@trustmybot-dev"]' ~/.claude/plugins/installed_plugins.json
+```
 
 ## Test *your own* plugin branch via this catalog
 
@@ -74,7 +89,7 @@ The catalog format is reusable — any branch (yours or someone else's) becomes 
    /plugin install tmb@<your-branch>
    ```
 
-CC reads the catalog from your local disk; the plugin source still resolves via github (so your branch needs to be pushed somewhere CC can clone). When you push new commits to your branch and want CC to pull: `/plugin marketplace update <your-branch>` + `/plugin update tmb@<your-branch>`.
+CC reads the catalog from your local disk; the plugin source still resolves via github (so your branch needs to be pushed somewhere CC can clone). When you push new commits to your branch and want CC to pull: `/plugin marketplace update <your-branch>` + `/plugin update tmb@<your-branch>`. A custom branch has no CI version stamp, so its version stays the same between commits.
 
 This pattern is how the dev channel itself was built — `trustmybot/marketplace-dev` is just a `trustmybot/plugin@dev` instance of the same template.
 
@@ -107,7 +122,7 @@ claude --plugin-dir <path-to>/TMB/plugin --debug api,hooks --debug-file .claude/
 
 ## Channel routing
 
-- This catalog: **DEV channel** (`trustmybot/plugin@dev` — bleeding edge)
+- This catalog: **DEV channel** (`trustmybot/plugin@dev-build`, the CI-stamped copy of `dev` — bleeding edge)
 - [trustmybot/marketplace-rc](https://github.com/trustmybot/marketplace-rc) — pre-release builds (rc tags)
 - [trustmybot/marketplace](https://github.com/trustmybot/marketplace) — production (stable tags from main)
 
