@@ -1,116 +1,92 @@
 # TMB plugin marketplace — DEV
 
-Catalog for the **dev channel** of the [TMB plugin](https://github.com/trustmybot/plugin). Tracks the `dev` branch of `trustmybot/plugin` — what's about to ship in the next rc. Use this when you want to try the latest doctrine + features before they reach the rc or stable channels.
+Catalog for the **dev channel** of the [TMB plugin](https://github.com/trustmybot/plugin). It tracks `trustmybot/plugin@dev-build`: a copy of the `dev` branch that CI stamps with a version on every push. Use it to run what will ship in the next rc.
+
+| Channel | Catalog | Plugin source | Version |
+|---|---|---|---|
+| **dev** (this one) | `trustmybot-dev` | `trustmybot/plugin@dev-build` | `X.Y.Z-dev.<n>.gh<PR>` |
+| rc | [`trustmybot-rc`](https://github.com/trustmybot/marketplace-rc) | a `vX.Y.Z-rc.N` tag | `X.Y.Z-rc.N` |
+| stable | [`trustmybot`](https://github.com/trustmybot/marketplace) | `trustmybot/plugin@main` | `X.Y.Z` |
+
+Every channel installs the plugin as `tmb`, so one `tmb` is enabled per project at a time.
+
+## How a dev build is made
+
+There is no GitHub release for the dev channel. The plugin's [`dev-build` workflow](https://github.com/trustmybot/plugin/blob/dev/.github/workflows/dev-build.yml) runs on every push to `dev`:
+
+1. Resolves the next release version from the lowest open `vX.Y.Z` milestone above the last stable tag.
+2. Stamps the commit as `X.Y.Z-dev.<n>.gh<PR>` (`n` counts dev builds since the last stable tag; `gh<PR>` is the PR that landed).
+3. Force-pushes the stamped commit to `refs/heads/dev-build` and comments the version on the PR.
+
+The version is in `.claude-plugin/plugin.json` on `dev-build` and in the installed plugin's cache directory name. Check what the channel currently serves:
+
+```bash
+gh api repos/trustmybot/plugin/contents/.claude-plugin/plugin.json?ref=dev-build --jq .content | base64 -d | jq -r .version
+```
 
 ## Install
 
-```
-/plugin marketplace add trustmybot/marketplace-dev
-/plugin install tmb@trustmybot-dev
-```
+Pick a scope. TMB keeps its trajectory DB and hooks per project, so install it **into the project**, never at user scope:
 
-The dev channel installs as `tmb` (same name as the released plugin), so only one can be enabled at a time.
+| Scope | Written to | Use when |
+|---|---|---|
+| `local` | `.claude/settings.local.json` (git-ignored) | Your own choice of channel; teammates may be on another one. The default for dev. |
+| `project` | `.claude/settings.json` (committed) | The whole team pins the same channel. |
 
-### Disable any existing `tmb` install first
-
-```
-/plugin disable tmb
-```
-
-Use `/plugin disable` rather than `/plugin uninstall` so you can flip back to the released channel with `/plugin enable tmb` when done.
-
-### When CC asks for scope, pick *local*
-
-`/plugin marketplace add` will prompt:
-
-```
-  Install for all collaborators on this repository (project scope)
-> Install for you, in this repo only (local scope)
-```
-
-**Pick local scope.** The dev channel is a per-developer choice; teammates may each be on a different channel (stable / rc / dev). Project scope is right only when a team wants everyone pinned to the same channel.
-
-## Pull the latest dev tip
-
-The marketplace ref is `dev`, but CC caches a clone — newer commits on `dev` don't reach your install until you refresh:
-
-```
-/plugin marketplace update trustmybot-dev
-/plugin update tmb@trustmybot-dev
-```
-
-`/reload-plugins` only re-reads what CC already has on disk; you need `marketplace update` + `update` to fetch new commits from the remote `dev` branch.
-
-## Test *your own* plugin branch via this catalog
-
-The catalog format is reusable — any branch (yours or someone else's) becomes installable by editing one line. Workflow:
-
-1. Push your plugin branch to `trustmybot/plugin` (or your fork).
-2. Clone this catalog locally:
-   ```bash
-   git clone https://github.com/trustmybot/marketplace-dev.git
-   ```
-3. Edit `.claude-plugin/marketplace.json` — change the top-level `name` to something distinctive (so CC won't confuse it with the published `trustmybot-dev`), and change `source.ref` to your branch (or `source.repo` to your fork):
-   ```json
-   {
-     "name": "<your-branch>",
-     ...
-     "plugins": [
-       {
-         "name": "tmb",
-         "source": {
-           "source": "github",
-           "repo": "<your-owner>/plugin",
-           "ref": "<your-branch>"
-         }
-       }
-     ]
-   }
-   ```
-   No need to push this edit. The local copy is enough — CC reads the catalog from your filesystem.
-4. Add the marketplace from the local clone path and install via your catalog name:
-   ```
-   /plugin marketplace add <path-to>/marketplace-dev
-   /plugin install tmb@<your-branch>
-   ```
-
-CC reads the catalog from your local disk; the plugin source still resolves via github (so your branch needs to be pushed somewhere CC can clone). When you push new commits to your branch and want CC to pull: `/plugin marketplace update <your-branch>` + `/plugin update tmb@<your-branch>`.
-
-This pattern is how the dev channel itself was built — `trustmybot/marketplace-dev` is just a `trustmybot/plugin@dev` instance of the same template.
-
-## Test *uncommitted* edits (not pushed anywhere)
-
-Marketplace plugins must be pulled from a remote (github / url). For edits that aren't pushed anywhere yet, skip the marketplace entirely and point CC at the working tree directly:
+Run from the project root. The slash-command form (`/plugin install tmb@trustmybot-dev`) prompts for the scope instead of taking `--scope`.
 
 ```bash
-claude --plugin-dir <path-to>/TMB/plugin --debug api,hooks --debug-file .claude/logs/tmb.log
+claude plugin marketplace add trustmybot/marketplace-dev --scope local
+claude plugin install tmb@trustmybot-dev --scope local
 ```
 
-`--plugin-dir` forces `clearPluginCache`; every boot re-resolves from disk. The `--debug api,hooks --debug-file` capture is optional but useful for L5/L6 runs and MCP-server crash repros.
+Replace both `--scope local` with `--scope project` for a team install.
 
-## Flip back to the released channel when done
+### Switching from another channel
 
+Disable the `tmb` you have before installing this one, at the scope it was installed in. `disable` keeps it so you can `enable` it again later; `uninstall` removes it.
+
+```bash
+claude plugin disable tmb@trustmybot --scope local
 ```
-/plugin uninstall tmb@trustmybot-dev
-/plugin enable tmb
+
+Then restart Claude Code (`/reload-plugins` does not rebind the MCP server or the hooks).
+
+## Upgrade to the newest dev build
+
+Claude Code caches a clone of `dev-build`. New builds reach your install only after a refresh, run from the project root:
+
+```bash
+claude plugin marketplace update trustmybot-dev
+claude plugin update tmb@trustmybot-dev --scope local
 ```
 
-## DB-path overlap
+Then restart Claude Code. Every merged PR on `trustmybot/plugin` carries a comment with these two commands and the build it produced.
 
-`plugin.json` declares `"name": "tmb"`, so the trajectory DB resolves to `.claude/tmb/trajectory.db` for both the released and the dev install — whichever is enabled at the moment writes to the same path per project. Two ways to keep state separated when you want it:
+## Back to the stable channel
 
-1. **Test in a scratch project dir** — the DB is per-project; a fresh repo gives the dev install its own DB.
-2. **Override per-session**:
-   ```bash
-   TRAJECTORY_DB_PATH=<path-to>/scratch/tmb-dev.db claude
-   ```
+```bash
+claude plugin uninstall tmb@trustmybot-dev --scope local
+claude plugin enable tmb@trustmybot --scope local
+```
 
-## Channel routing
+Restart Claude Code afterwards.
 
-- This catalog: **DEV channel** (`trustmybot/plugin@dev` — bleeding edge)
-- [trustmybot/marketplace-rc](https://github.com/trustmybot/marketplace-rc) — pre-release builds (rc tags)
-- [trustmybot/marketplace](https://github.com/trustmybot/marketplace) — production (stable tags from main)
+## Test your own plugin branch
+
+The catalog is a template: one line points it at any pushed branch.
+
+1. Push your branch to `trustmybot/plugin` or a fork.
+2. Clone this repo and edit `.claude-plugin/marketplace.json`: set the top-level `name` to something distinctive (so it does not collide with the published `trustmybot-dev`) and `plugins[0].source.ref` to your branch (`source.repo` to your fork). Do not push the edit; Claude Code reads the catalog from disk.
+3. Add the catalog by path and install from it:
+
+```bash
+claude plugin marketplace add <path-to>/marketplace-dev --scope local
+claude plugin install tmb@<your-catalog-name> --scope local
+```
+
+New commits on your branch arrive with `claude plugin marketplace update <your-catalog-name>` followed by `claude plugin update tmb@<your-catalog-name> --scope local`.
 
 ## Source
 
-Plugin code lives at [trustmybot/plugin](https://github.com/trustmybot/plugin). This repo contains only the marketplace catalog (`.claude-plugin/marketplace.json`).
+Plugin code lives at [trustmybot/plugin](https://github.com/trustmybot/plugin). This repo holds only the catalog, `.claude-plugin/marketplace.json`.
