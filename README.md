@@ -33,7 +33,7 @@ Pick a scope. TMB keeps its trajectory DB and hooks per project, so install it *
 | `local` | `.claude/settings.local.json` (git-ignored) | Your own choice of channel; teammates may be on another one. The default for dev. |
 | `project` | `.claude/settings.json` (committed) | The whole team pins the same channel. |
 
-Run from the project root. The slash-command form (`/plugin install tmb@trustmybot-dev`) prompts for the scope instead of taking `--scope`.
+Run from the project root.
 
 ```bash
 claude plugin marketplace add trustmybot/marketplace-dev --scope local
@@ -41,6 +41,8 @@ claude plugin install tmb@trustmybot-dev --scope local
 ```
 
 Replace both `--scope local` with `--scope project` for a team install.
+
+Then fully quit and relaunch Claude Code, and run `/tmb:onboard` in the project.
 
 ### Switching from another channel
 
@@ -50,7 +52,7 @@ Disable the `tmb` you have before installing this one, at the scope it was insta
 claude plugin disable tmb@trustmybot --scope local
 ```
 
-Then restart Claude Code (`/reload-plugins` does not rebind the MCP server or the hooks).
+Then install this channel with the commands above, and fully quit and relaunch Claude Code once.
 
 ## Upgrade to the newest dev build
 
@@ -61,16 +63,18 @@ claude plugin marketplace update trustmybot-dev
 claude plugin update tmb@trustmybot-dev --scope local
 ```
 
-Then restart Claude Code. Every merged PR on `trustmybot/plugin` carries a comment with these two commands and the build it produced.
+Then fully quit and relaunch Claude Code. Every merged PR on `trustmybot/plugin` carries a comment with these two commands and the build it produced.
 
 ## Back to the stable channel
+
+Run each at the scope it was installed in.
 
 ```bash
 claude plugin uninstall tmb@trustmybot-dev --scope local
 claude plugin enable tmb@trustmybot --scope local
 ```
 
-Restart Claude Code afterwards.
+Fully quit and relaunch Claude Code afterwards.
 
 ## Test your own plugin branch
 
@@ -85,7 +89,9 @@ claude plugin marketplace add <path-to>/marketplace-dev --scope local
 claude plugin install tmb@<your-catalog-name> --scope local
 ```
 
-New commits on your branch arrive with `claude plugin marketplace update <your-catalog-name>` followed by `claude plugin update tmb@<your-catalog-name> --scope local`.
+Then fully quit and relaunch Claude Code.
+
+New commits on your branch arrive with `claude plugin marketplace update <your-catalog-name>` followed by `claude plugin update tmb@<your-catalog-name> --scope local`, then fully quit and relaunch Claude Code.
 
 ## Source
 
